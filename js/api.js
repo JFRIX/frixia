@@ -27,17 +27,27 @@ function getResolvedOllamaBaseUrl(config = OLLAMA_CONFIG) {
 
 function getOllamaFetchDiagnostic(config = OLLAMA_CONFIG) {
     try {
+        const app = new URL(window.location.href);
+        if (app.protocol === 'file:') {
+            return 'Frixia est ouvert en fichier local (file://). Lancez plutôt un serveur web local (ex: python -m http.server) ou hébergez Frixia en HTTPS avec un proxy /ollama.';
+        }
+
         const resolved = getResolvedOllamaBaseUrl(config);
         if (!resolved) return 'URL Ollama vide.';
         const target = new URL(resolved, window.location.origin);
-        const app = new URL(window.location.href);
+
         if (app.protocol === 'https:' && target.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(target.hostname)) {
             return 'Votre site est en HTTPS mais Ollama est en HTTP (mixed content bloqué). Utilisez HTTPS côté Ollama ou activez le proxy même domaine.';
         }
+
+        if (config.useProxy) {
+            return `Le proxy même domaine est activé (${target.pathname || '/'}). Vérifiez que votre reverse proxy expose bien ${target.pathname || '/ollama'}/api/tags.`;
+        }
+
+        return `Impossible d'atteindre ${target.origin}. Vérifiez IP/URL, port 11434, CORS et pare-feu, ou activez le proxy même domaine (/ollama).`;
     } catch (e) {
         return 'URL Ollama invalide.';
     }
-    return 'Vérifiez IP/URL, port 11434, CORS et HTTPS/HTTP (ou activez le proxy même domaine).';
 }
 
 // Modèles et tarifs — chargés depuis models.json par loadModels()
