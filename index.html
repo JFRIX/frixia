@@ -238,6 +238,12 @@
             <label class="sp-modal-label" for="ollama-base-url">Adresse du serveur Ollama</label>
             <input type="text" id="ollama-base-url" class="sp-modal-input" placeholder="http://IP:11434">
 
+            <label class="sp-modal-label" for="ollama-use-proxy" style="margin-top:8px;">Accès Ollama via proxy même domaine (recommandé Hostinger)</label>
+            <input type="checkbox" id="ollama-use-proxy" style="margin: 4px 0 8px 0;"> Utiliser un chemin proxy local
+
+            <label class="sp-modal-label" for="ollama-proxy-path">Chemin proxy (si activé)</label>
+            <input type="text" id="ollama-proxy-path" class="sp-modal-input" placeholder="/ollama">
+
             <label class="sp-modal-label" for="ollama-model">Modèle Ollama</label>
             <input type="text" id="ollama-model" class="sp-modal-input" placeholder="llama3.1:8b">
 
@@ -253,7 +259,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
             </div>
-            <small style="display:block;color:var(--text-secondary);margin-top:6px">Vous pouvez aussi préremplir ces valeurs dans <code>config/ollama.config.json</code> (IP, modèle, etc.).</small>
+            <small style="display:block;color:var(--text-secondary);margin-top:6px">Vous pouvez aussi préremplir ces valeurs dans <code>config/ollama.config.json</code> (IP, modèle, proxy, etc.).</small>
             <div class="sp-modal-actions">
                 <button id="apikeys-modal-cancel" class="sp-modal-btn sp-modal-btn-cancel">Annuler</button>
                 <button id="apikeys-modal-save" class="sp-modal-btn sp-modal-btn-save">Enregistrer</button>

@@ -1,6 +1,8 @@
 {
   "enabled": false,
   "baseUrl": "http://VOTRE-IP:11434",
+  "useProxy": false,
+  "proxyPath": "/ollama",
   "model": "llama3.1:8b",
   "keepAlive": "5m"
 }

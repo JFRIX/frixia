@@ -10,9 +10,35 @@ let API_KEYS = {
 let OLLAMA_CONFIG = {
     enabled: false,
     baseUrl: '',
+    useProxy: false,
+    proxyPath: '/ollama',
     model: '',
     keepAlive: '5m'
 };
+
+function getResolvedOllamaBaseUrl(config = OLLAMA_CONFIG) {
+    if (config.useProxy) {
+        const path = (config.proxyPath || '/ollama').trim() || '/ollama';
+        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+        return `${window.location.origin}${normalizedPath}`;
+    }
+    return (config.baseUrl || '').trim();
+}
+
+function getOllamaFetchDiagnostic(config = OLLAMA_CONFIG) {
+    try {
+        const resolved = getResolvedOllamaBaseUrl(config);
+        if (!resolved) return 'URL Ollama vide.';
+        const target = new URL(resolved, window.location.origin);
+        const app = new URL(window.location.href);
+        if (app.protocol === 'https:' && target.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(target.hostname)) {
+            return 'Votre site est en HTTPS mais Ollama est en HTTP (mixed content bloqué). Utilisez HTTPS côté Ollama ou activez le proxy même domaine.';
+        }
+    } catch (e) {
+        return 'URL Ollama invalide.';
+    }
+    return 'Vérifiez IP/URL, port 11434, CORS et HTTPS/HTTP (ou activez le proxy même domaine).';
+}
 
 // Modèles et tarifs — chargés depuis models.json par loadModels()
 let MODELS = [];
@@ -93,7 +119,7 @@ function saveOllamaConfig(config) {
 }
 
 function isOllamaReady() {
-    return Boolean(OLLAMA_CONFIG.enabled && OLLAMA_CONFIG.baseUrl && OLLAMA_CONFIG.model);
+    return Boolean(OLLAMA_CONFIG.enabled && getResolvedOllamaBaseUrl(OLLAMA_CONFIG) && OLLAMA_CONFIG.model);
 }
 
 function getOllamaConfig() {
@@ -108,15 +134,16 @@ async function testOllamaConnection(configOverride = null) {
         model: (configOverride.model || '').trim()
     } : OLLAMA_CONFIG;
 
-    if (!cfg.baseUrl || !cfg.model) {
+    const base = getResolvedOllamaBaseUrl(cfg);
+    if (!base || !cfg.model) {
         return { ok: false, message: 'URL et modèle Ollama requis.' };
     }
 
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
 
     try {
-        const response = await fetch(`${cfg.baseUrl.replace(/\/$/, '')}/api/tags`, { method: 'GET', headers });
+        const response = await fetch(`${base.replace(/\/$/, '')}/api/tags`, { method: 'GET', headers });
         if (!response.ok) {
             const err = await response.text();
             return { ok: false, message: `Serveur Ollama non joignable (${response.status}) ${err}` };
@@ -130,7 +157,7 @@ async function testOllamaConnection(configOverride = null) {
         return { ok: true, message: `Connexion OK. Modèle "${cfg.model}" disponible.` };
     } catch (err) {
         if (err && err.message && /Failed to fetch/i.test(err.message)) {
-            return { ok: false, message: 'Failed to fetch : vérifiez l\'IP/URL, le port 11434, CORS et HTTPS/HTTP.' };
+            return { ok: false, message: `Failed to fetch : ${getOllamaFetchDiagnostic(cfg)}` };
         }
         return { ok: false, message: err?.message || 'Erreur réseau inconnue.' };
     }
@@ -351,7 +378,8 @@ async function streamOllama(modelId, conversationHistory, onChunk, onDone, onErr
         const headers = { 'Content-Type': 'application/json' };
         if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
 
-        const response = await fetch(`${OLLAMA_CONFIG.baseUrl.replace(/\/$/, '')}/api/chat`, {
+        const base = getResolvedOllamaBaseUrl(OLLAMA_CONFIG);
+        const response = await fetch(`${base.replace(/\/$/, '')}/api/chat`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -402,7 +430,7 @@ async function streamOllama(modelId, conversationHistory, onChunk, onDone, onErr
     } catch (err) {
         if (err.name === 'AbortError') { onDone(null, []); return; }
         if (err && err.message && /Failed to fetch/i.test(err.message)) {
-            onError(new Error('Failed to fetch : impossible de joindre Ollama (IP/URL/port/CORS).'));
+            onError(new Error(`Failed to fetch : ${getOllamaFetchDiagnostic(OLLAMA_CONFIG)}`));
             return;
         }
         onError(err);

@@ -1241,9 +1241,6 @@ function showModelAlert(msg) {
 
 function normalizeApiErrorMessage(err) {
     const message = err?.message || 'Erreur inconnue';
-    if (/Failed to fetch/i.test(message)) {
-        return 'Failed to fetch : impossible de joindre le serveur. Vérifiez IP/URL, port, CORS et HTTPS/HTTP.';
-    }
     return message;
 }
 
@@ -3023,6 +3020,8 @@ function openApiKeysModal() {
     const ollamaCfg = getOllamaConfig();
     document.getElementById('ollama-enabled').checked = !!ollamaCfg.enabled;
     document.getElementById('ollama-base-url').value = ollamaCfg.baseUrl || '';
+    document.getElementById('ollama-use-proxy').checked = !!ollamaCfg.useProxy;
+    document.getElementById('ollama-proxy-path').value = ollamaCfg.proxyPath || '/ollama';
     document.getElementById('ollama-model').value = ollamaCfg.model || '';
     ollamaTestResult.textContent = '';
     apikeysModalOverlay.style.display = 'flex';
@@ -3044,6 +3043,8 @@ function saveApiKeysFromModal() {
     saveOllamaConfig({
         enabled: document.getElementById('ollama-enabled').checked,
         baseUrl: document.getElementById('ollama-base-url').value.trim(),
+        useProxy: document.getElementById('ollama-use-proxy').checked,
+        proxyPath: document.getElementById('ollama-proxy-path').value.trim() || '/ollama',
         model: document.getElementById('ollama-model').value.trim()
     });
 
@@ -3058,8 +3059,10 @@ function saveApiKeysFromModal() {
 
 ollamaTestBtn.addEventListener('click', async () => {
     const baseUrl = document.getElementById('ollama-base-url').value.trim();
+    const useProxy = document.getElementById('ollama-use-proxy').checked;
+    const proxyPath = document.getElementById('ollama-proxy-path').value.trim() || '/ollama';
     const model = document.getElementById('ollama-model').value.trim();
-    if (!baseUrl || !model) {
+    if ((!useProxy && !baseUrl) || !model) {
         ollamaTestResult.textContent = 'Renseignez URL et modèle.';
         ollamaTestResult.style.color = '#c00';
         return;
@@ -3069,7 +3072,7 @@ ollamaTestBtn.addEventListener('click', async () => {
     ollamaTestResult.style.color = 'var(--text-secondary)';
     ollamaTestResult.textContent = 'Test en cours...';
     try {
-        const result = await testOllamaConnection({ baseUrl, model });
+        const result = await testOllamaConnection({ baseUrl, useProxy, proxyPath, model });
         ollamaTestResult.textContent = result.message;
         ollamaTestResult.style.color = result.ok ? '#1a7f37' : '#c00';
     } catch (e) {
