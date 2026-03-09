@@ -28,9 +28,6 @@ function getResolvedOllamaBaseUrl(config = OLLAMA_CONFIG) {
 function getOllamaFetchDiagnostic(config = OLLAMA_CONFIG) {
     try {
         const app = new URL(window.location.href);
-        if (app.protocol === 'file:') {
-            return 'Frixia est ouvert en fichier local (file://). Lancez plutôt un serveur web local (ex: python -m http.server) ou hébergez Frixia en HTTPS avec un proxy /ollama.';
-        }
 
         const resolved = getResolvedOllamaBaseUrl(config);
         if (!resolved) return 'URL Ollama vide.';
