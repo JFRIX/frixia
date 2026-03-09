@@ -57,6 +57,8 @@ const apikeysBtn = document.getElementById('apikeys-btn');
 const apikeysModalOverlay = document.getElementById('apikeys-modal-overlay');
 const apikeysModalCancel = document.getElementById('apikeys-modal-cancel');
 const apikeysModalSave = document.getElementById('apikeys-modal-save');
+const settingsMenuToggle = document.getElementById('settings-menu-toggle');
+const settingsMenu = document.getElementById('settings-menu');
 const ollamaTestBtn = document.getElementById('ollama-test-btn');
 const ollamaTestResult = document.getElementById('ollama-test-result');
 
@@ -102,6 +104,14 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('minou-theme', isDark ? 'dark' : 'light');
     themeToggle.innerHTML = isDark ? '&#9790; Thème sombre' : '&#9788; Thème clair';
 });
+
+if (settingsMenuToggle && settingsMenu) {
+    settingsMenuToggle.addEventListener('click', () => {
+        const isCollapsed = settingsMenu.classList.toggle('collapsed');
+        settingsMenuToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        settingsMenuToggle.textContent = isCollapsed ? '⚙️ Configuration ▾' : '⚙️ Configuration ▴';
+    });
+}
 
 // --- Recherche de conversations ---
 convSearch.addEventListener('input', () => {
