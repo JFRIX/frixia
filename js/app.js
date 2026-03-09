@@ -57,6 +57,10 @@ const apikeysBtn = document.getElementById('apikeys-btn');
 const apikeysModalOverlay = document.getElementById('apikeys-modal-overlay');
 const apikeysModalCancel = document.getElementById('apikeys-modal-cancel');
 const apikeysModalSave = document.getElementById('apikeys-modal-save');
+const settingsMenuToggle = document.getElementById('settings-menu-toggle');
+const settingsMenu = document.getElementById('settings-menu');
+const ollamaTestBtn = document.getElementById('ollama-test-btn');
+const ollamaTestResult = document.getElementById('ollama-test-result');
 
 let currentModel = null;
 let currentImageModel = null;
@@ -100,6 +104,14 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('minou-theme', isDark ? 'dark' : 'light');
     themeToggle.innerHTML = isDark ? '&#9790; Thème sombre' : '&#9788; Thème clair';
 });
+
+if (settingsMenuToggle && settingsMenu) {
+    settingsMenuToggle.addEventListener('click', () => {
+        const isCollapsed = settingsMenu.classList.toggle('collapsed');
+        settingsMenuToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        settingsMenuToggle.textContent = isCollapsed ? '⚙️ Configuration ▾' : '⚙️ Configuration ▴';
+    });
+}
 
 // --- Recherche de conversations ---
 convSearch.addEventListener('input', () => {
@@ -1040,6 +1052,13 @@ function populateSearchModelSelect() {
 // --- Sélecteurs mutuellement exclusifs ---
 function checkApiKeyForModel(modelId, lookupFn) {
     const editeur = lookupFn(modelId);
+    if (editeur === 'ollama') {
+        if (!isOllamaReady()) {
+            showModelAlert('Configuration Ollama incomplète. Vérifiez la section Ollama dans Configuration.');
+            return false;
+        }
+        return true;
+    }
     if (editeur && !API_KEYS[editeur]) {
         showModelAlert(`Clé API ${editeur} manquante. Renseignez-la dans Configuration.`);
         return false;
@@ -1228,6 +1247,11 @@ function showModelAlert(msg) {
         el.style.display = 'none';
         el.textContent = 'Veuillez choisir un modèle (texte ou image) avant d\'envoyer.';
     }, 4000);
+}
+
+function normalizeApiErrorMessage(err) {
+    const message = err?.message || 'Erreur inconnue';
+    return message;
 }
 
 // --- Générer l'identifiant de conversation ---
@@ -1717,7 +1741,7 @@ function regenerateLastResponse() {
             (err) => {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
-                if (textEl) { textEl.textContent = `Erreur : ${err.message}`; textEl.style.color = '#c00'; }
+                if (textEl) { textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`; textEl.style.color = '#c00'; }
                 isStreaming = false; currentAbortController = null; updateSendButton(); promptInput.focus();
             },
             regenRefImages,
@@ -1755,7 +1779,7 @@ function regenerateLastResponse() {
             (err) => {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
-                if (textEl) { textEl.textContent = `Erreur : ${err.message}`; textEl.style.color = '#c00'; }
+                if (textEl) { textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`; textEl.style.color = '#c00'; }
                 isStreaming = false; currentAbortController = null; updateSendButton(); promptInput.focus();
             },
             spContent,
@@ -2007,7 +2031,7 @@ function sendMessage() {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
                 if (textEl) {
-                    textEl.textContent = `Erreur : ${err.message}`;
+                    textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`;
                     textEl.style.color = '#c00';
                 }
                 isStreaming = false;
@@ -2085,7 +2109,7 @@ function sendMessage() {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
                 if (textEl) {
-                    textEl.textContent = `Erreur : ${err.message}`;
+                    textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`;
                     textEl.style.color = '#c00';
                 }
                 isStreaming = false;
@@ -3002,6 +3026,14 @@ function openApiKeysModal() {
     document.getElementById('apikey-anthropic').value = API_KEYS.anthropic || '';
     document.getElementById('apikey-google').value = API_KEYS.google || '';
     document.getElementById('apikey-perplexity').value = API_KEYS.perplexity || '';
+    document.getElementById('apikey-ollama').value = API_KEYS.ollama || '';
+    const ollamaCfg = getOllamaConfig();
+    document.getElementById('ollama-enabled').checked = !!ollamaCfg.enabled;
+    document.getElementById('ollama-base-url').value = ollamaCfg.baseUrl || '';
+    document.getElementById('ollama-use-proxy').checked = !!ollamaCfg.useProxy;
+    document.getElementById('ollama-proxy-path').value = ollamaCfg.proxyPath || '/ollama';
+    document.getElementById('ollama-model').value = ollamaCfg.model || '';
+    ollamaTestResult.textContent = '';
     apikeysModalOverlay.style.display = 'flex';
 }
 
@@ -3014,10 +3046,52 @@ function saveApiKeysFromModal() {
         openai: document.getElementById('apikey-openai').value.trim(),
         anthropic: document.getElementById('apikey-anthropic').value.trim(),
         google: document.getElementById('apikey-google').value.trim(),
-        perplexity: document.getElementById('apikey-perplexity').value.trim()
+        perplexity: document.getElementById('apikey-perplexity').value.trim(),
+        ollama: document.getElementById('apikey-ollama').value.trim()
     });
+
+    saveOllamaConfig({
+        enabled: document.getElementById('ollama-enabled').checked,
+        baseUrl: document.getElementById('ollama-base-url').value.trim(),
+        useProxy: document.getElementById('ollama-use-proxy').checked,
+        proxyPath: document.getElementById('ollama-proxy-path').value.trim() || '/ollama',
+        model: document.getElementById('ollama-model').value.trim()
+    });
+
+    loadModels();
+    populateModelSelect();
+    if (currentModel && !MODELS.some(m => m.id === currentModel)) {
+        currentModel = null;
+        modelSelect.value = '';
+    }
     closeApiKeysModal();
 }
+
+ollamaTestBtn.addEventListener('click', async () => {
+    const baseUrl = document.getElementById('ollama-base-url').value.trim();
+    const useProxy = document.getElementById('ollama-use-proxy').checked;
+    const proxyPath = document.getElementById('ollama-proxy-path').value.trim() || '/ollama';
+    const model = document.getElementById('ollama-model').value.trim();
+    if ((!useProxy && !baseUrl) || !model) {
+        ollamaTestResult.textContent = 'Renseignez URL et modèle.';
+        ollamaTestResult.style.color = '#c00';
+        return;
+    }
+
+    ollamaTestBtn.disabled = true;
+    ollamaTestResult.style.color = 'var(--text-secondary)';
+    ollamaTestResult.textContent = 'Test en cours...';
+    try {
+        const result = await testOllamaConnection({ baseUrl, useProxy, proxyPath, model });
+        ollamaTestResult.textContent = result.message;
+        ollamaTestResult.style.color = result.ok ? '#1a7f37' : '#c00';
+    } catch (e) {
+        ollamaTestResult.textContent = normalizeApiErrorMessage(e);
+        ollamaTestResult.style.color = '#c00';
+    } finally {
+        ollamaTestBtn.disabled = false;
+    }
+});
 
 function fmtTokens(n) {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';

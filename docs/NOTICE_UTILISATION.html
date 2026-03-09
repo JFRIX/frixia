@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frixia — Notice d'utilisation</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;margin:0;background:#f7f7f8;color:#1a1a1a}
+    .wrap{max-width:980px;margin:0 auto;padding:28px 20px 56px}
+    h1{font-size:2rem;margin:0 0 8px}
+    h2{margin-top:30px;font-size:1.25rem;border-bottom:1px solid #ddd;padding-bottom:6px}
+    .intro{color:#555;margin-bottom:18px}
+    ul{padding-left:22px}
+    .card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:18px 18px;margin:12px 0}
+    code{background:#f0f0f0;padding:2px 6px;border-radius:5px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Notice d'utilisation — Frixia</h1>
+    <p class="intro">Guide pratique complet pour démarrer, configurer et exploiter Frixia efficacement.</p>
+
+    <div class="card"><h2>1. Présentation de Frixia</h2><p>Frixia est une plateforme multi-IA locale qui permet d’utiliser plusieurs modèles d’intelligence artificielle depuis une seule interface.</p><p>L’application fonctionne directement sur ton ordinateur à partir de fichiers web simples. Elle ne nécessite pas d’installation complexe, ni de base de données. Elle s’ouvre dans un navigateur internet à partir d’un fichier <code>index.html</code>.</p><p>Frixia permet notamment de :</p><ul><li>dialoguer avec plusieurs IA depuis la même interface</li><li>utiliser des modèles texte, image et recherche web</li><li>changer de modèle en cours de conversation</li><li>enregistrer des prompts réutilisables</li><li>créer des rôles personnalisés</li><li>suivre précisément les coûts d’utilisation des API</li><li>sauvegarder et restaurer ses paramètres</li></ul></div>
+
+    <div class="card"><h2>2. Principe de fonctionnement</h2><p>Frixia ne fournit pas directement les modèles IA. L’application sert d’interface entre toi et les fournisseurs d’IA comme OpenAI, Anthropic, Google ou Perplexity.</p><p>Pour utiliser Frixia, tu dois renseigner tes propres clés API. Ainsi, tu utilises directement les services des fournisseurs, sans intermédiaire.</p><p><strong>Important :</strong> Frixia est gratuit en tant qu’outil, mais les appels API restent payants selon ta consommation. Tu ne paies donc pas un abonnement à Frixia, mais l’usage réel des modèles que tu appelles.</p></div>
+
+    <div class="card"><h2>3. Installation de Frixia</h2><p><strong>Étape 1 : télécharger l’archive</strong><br>Télécharge le fichier ZIP de Frixia.</p><p><strong>Étape 2 : décompresser le fichier</strong><br>Décompresse l’archive ZIP sur ton ordinateur dans le dossier de ton choix.</p><p><strong>Étape 3 : ouvrir le dossier</strong><br>Dans le dossier obtenu, tu trouveras plusieurs fichiers, dont un fichier principal nommé <code>index.html</code>.</p><p><strong>Étape 4 : lancer l’application</strong><br>Double-clique sur <code>index.html</code> pour ouvrir Frixia dans ton navigateur.</p></div>
+
+    <div class="card"><h2>4. Stockage des données et sauvegarde</h2><p>Frixia enregistre les paramètres directement dans le stockage local du navigateur.</p><p>Cela signifie que les réglages, prompts, rôles, préférences et clés API restent sur ton poste.</p><p><strong>Attention :</strong> si tu effaces complètement les données du navigateur, tu peux perdre tes paramètres, tes prompts enregistrés, tes rôles et tes préférences.<br><strong>Conseil :</strong> pense à utiliser régulièrement la fonction Exporter pour créer une sauvegarde de tes paramètres.</p></div>
+
+    <div class="card"><h2>5. Import et export des sauvegardes</h2><p>Frixia propose un système de sauvegarde simple.</p><ul><li>Exporter permet de générer un fichier contenant les paramètres de l’application</li><li>Importer permet de recharger une sauvegarde précédemment exportée</li></ul><p>Effectue une sauvegarde après avoir configuré tes clés API, créé plusieurs rôles, enregistré des prompts importants ou avant de changer de navigateur.</p></div>
+
+    <div class="card"><h2>6. Configuration des clés API</h2><p>Avant d’utiliser Frixia, tu dois renseigner au moins une clé API dans le menu Configuration.</p><p>Les fournisseurs prévus dans la présentation sont :</p><ul><li>OpenAI</li><li>Anthropic</li><li>Google</li><li>Perplexity</li></ul><p>Le principe est simple : tu crées une clé API depuis la plateforme du fournisseur, puis tu la copies dans Frixia.</p><p><strong>Important :</strong> chaque clé est personnelle. Ne partage jamais tes clés API avec d’autres personnes.</p></div>
+
+    <div class="card"><h2>7. Interface générale</h2><p>L’interface de Frixia est organisée autour de plusieurs zones :</p><ul><li>une colonne de gauche pour la configuration, les statistiques, l’import/export, les conversations, les dossiers, les prompts et les rôles</li><li>une zone centrale pour afficher la conversation en cours</li><li>une zone inférieure pour saisir un prompt, ajouter un fichier, activer la recherche web, utiliser la dictée vocale, améliorer un prompt et envoyer la demande</li></ul></div>
+
+    <div class="card"><h2>8. Créer une nouvelle conversation</h2><p>Pour commencer, clique sur Nouvelle conversation.</p><p>Ensuite :</p><ul><li>écris ton prompt</li><li>choisis le modèle à utiliser</li><li>active éventuellement la recherche web</li><li>clique sur envoyer</li></ul><p>Exemple : <em>Fais-moi un résumé de la chute du mur de Berlin</em></p></div>
+
+    <div class="card"><h2>9. Choisir un modèle IA</h2><p>Frixia permet de choisir différents types de modèles :</p><ul><li>modèles texte pour les réponses, résumés, analyses, traductions et reformulations</li><li>modèles image pour générer des visuels à partir d’un prompt</li><li>modèles de recherche pour les recherches web enrichies</li></ul><p>Tu peux changer de modèle même au cours d’une conversation.</p></div>
+
+    <div class="card"><h2>10. Coût estimé et suivi des tokens</h2><p>Frixia affiche plusieurs informations utiles :</p><ul><li>le nombre de tokens en entrée</li><li>le nombre de tokens en sortie</li><li>le coût estimé</li><li>le temps de réponse</li></ul><p>Cela permet de suivre précisément l’impact financier de chaque requête et de comparer les modèles.</p></div>
+
+    <div class="card"><h2>11. Utiliser la recherche web</h2><p>Active la recherche web lorsque ta demande nécessite des informations récentes ou vérifiables en ligne.</p><p>Évite de l’activer pour les sujets purement historiques ou généraux afin de ne pas générer de coûts inutiles.</p></div>
+
+    <div class="card"><h2>12. Ajouter un fichier à une conversation</h2><p>Frixia permet d’ajouter des fichiers à analyser, soit via le bouton d’ajout, soit par glisser-déposer.</p><p>Exemples d’usages :</p><ul><li>analyser un document texte</li><li>exploiter un PDF</li><li>utiliser un contenu comme contexte pour une demande</li></ul></div>
+
+    <div class="card"><h2>13. Amélioration automatique du prompt</h2><p>Une fonction d’optimisation permet d’améliorer automatiquement un prompt trop vague pour le rendre plus clair, plus précis et plus efficace.</p><p>Exemple de départ : <em>Parle-moi du mur de Berlin</em></p><p>Exemple amélioré : <em>Rédige un exposé clair et synthétique sur la chute du mur de Berlin en incluant le contexte historique, les causes, les événements et les conséquences</em></p></div>
+
+    <div class="card"><h2>14. Dictée vocale et lecture audio</h2><p>Frixia intègre des fonctions vocales :</p><ul><li>dictée vocale pour parler au lieu d’écrire</li><li>lecture à haute voix pour écouter une réponse générée</li></ul><p>Note : ces fonctions peuvent consommer des tokens et générer des coûts supplémentaires.</p></div>
+
+    <div class="card"><h2>15. Gestion des conversations</h2><p>Chaque conversation est conservée dans l’historique. Tu peux la rouvrir, la renommer, la supprimer ou la déplacer dans un dossier.</p></div>
+
+    <div class="card"><h2>16. Organiser ses conversations avec des dossiers</h2><p>Frixia permet de créer des dossiers personnalisés comme Marketing, Développement, Clients, Articles, Visuels ou Veille IA.</p><p>Tu peux ensuite glisser une conversation dans le dossier de ton choix.</p></div>
+
+    <div class="card"><h2>17. Rechercher dans ses conversations</h2><p>Une fonction de recherche permet de retrouver rapidement une ancienne conversation à partir d’un sujet, d’un mot clé ou d’une réflexion passée.</p></div>
+
+    <div class="card"><h2>18. Enregistrer des prompts</h2><p>Frixia permet d’enregistrer des prompts complets ou des morceaux de prompt pour les réutiliser plus tard.</p><p>Exemple : <em>Réponds de manière claire, structurée et professionnelle</em></p></div>
+
+    <div class="card"><h2>19. Insérer un prompt enregistré</h2><p>Lors d’une nouvelle demande, tu peux insérer un prompt sauvegardé dans le champ de saisie afin de combiner une demande ponctuelle avec une consigne standardisée.</p></div>
+
+    <div class="card"><h2>20. Les rôles</h2><p>Les rôles sont l’une des fonctions les plus puissantes de Frixia. Un rôle agit comme une consigne générale appliquée à toute la conversation.</p><p>Exemples de rôles :</p><ul><li>traducteur anglais</li><li>assistant marketing</li><li>professeur exigeant</li><li>rédacteur web</li><li>expert juridique</li><li>ami décontracté</li></ul></div>
+
+    <div class="card"><h2>21. Créer un rôle personnalisé</h2><p>Tu peux créer tes propres rôles dans Frixia.</p><p>Exemple :</p><p><strong>Nom :</strong> Rédacteur journalistique</p><p><strong>Consigne :</strong> Tu rédiges avec clarté, précision et sobriété. Tu structures les réponses comme un article professionnel, sans blabla inutile.</p><p>Une fois enregistré, ce rôle peut être sélectionné au démarrage d’une nouvelle conversation.</p></div>
+
+    <div class="card"><h2>22. Optimisation d’un rôle</h2><p>Frixia permet d’optimiser automatiquement le texte définissant un rôle pour le rendre plus précis, plus structuré et plus efficace.</p></div>
+
+    <div class="card"><h2>23. Exporter et importer des rôles</h2><p>Les rôles peuvent être exportés dans un fichier puis réimportés plus tard.</p><ul><li>sauvegarder tes rôles</li><li>les transférer vers un autre poste</li><li>les partager à d’autres utilisateurs</li></ul></div>
+
+    <div class="card"><h2>24. Exporter une conversation</h2><p>Frixia permet d’exporter les conversations dans différents formats comme Markdown et HTML.</p><p>Le Markdown est pratique pour l’archivage et la réutilisation dans une autre IA. Le HTML conserve une mise en page plus propre pour la lecture et le partage.</p></div>
+
+    <div class="card"><h2>25. Résumer automatiquement une conversation</h2><p>Frixia peut produire un résumé synthétique d’une conversation complète pour garder l’essentiel, reprendre un sujet plus tard ou transmettre une synthèse à quelqu’un.</p></div>
+
+    <div class="card"><h2>26. Génération d’images</h2><p>Frixia permet d’utiliser des modèles d’image. Tu peux écrire un prompt visuel, choisir un format puis lancer la génération.</p><p>Formats mentionnés :</p><ul><li>carré</li><li>paysage</li><li>portrait</li></ul></div>
+
+    <div class="card"><h2>27. Changer de modèle dans une conversation</h2><p>Frixia permet d’utiliser plusieurs modèles dans une même conversation.</p><p>Exemple de workflow :</p><ul><li>demander une analyse à un modèle texte avancé</li><li>demander un résumé à un modèle moins coûteux</li><li>générer un visuel à partir de la conversation</li><li>faire une recherche web complémentaire avec un modèle adapté</li></ul></div>
+
+    <div class="card"><h2>28. Statistiques d’usage</h2><p>La section Statistiques permet de visualiser le coût total, les coûts par conversation, par modèle, par fournisseur et par catégorie.</p><p>Cela aide à piloter intelligemment ses dépenses API.</p></div>
+
+    <div class="card"><h2>29. Fichier models.js</h2><p>Un fichier nommé <code>models.js</code> permet de définir la liste des modèles disponibles dans Frixia.</p><p>Il peut être modifié manuellement pour ajouter ou supprimer des modèles et ajuster les informations de prix.</p><p><strong>Attention :</strong> cette opération demande de respecter rigoureusement la structure du fichier pour éviter les erreurs.</p></div>
+
+    <div class="card"><h2>30. Conseils de bonne utilisation</h2><ul><li>commence simple avec un seul fournisseur</li><li>sauvegarde régulièrement</li><li>surveille les coûts</li><li>n’active la recherche web que si nécessaire</li><li>crée tes rôles personnalisés</li><li>enregistre tes meilleurs prompts</li><li>teste plusieurs modèles selon les usages</li></ul></div>
+
+    <div class="card"><h2>31. Limites à connaître</h2><ul><li>dépendance aux API et aux clés valides</li><li>coût variable selon l’usage</li><li>risque de perte des données locales sans sauvegarde</li><li>présence possible de bugs selon l’évolution de l’outil</li></ul></div>
+
+    <div class="card"><h2>32. Conclusion</h2><p>Frixia est une interface locale multi-IA simple, souple et puissante. Elle permet de centraliser plusieurs modèles dans un seul outil, tout en gardant la maîtrise des usages, des prompts, des rôles et des coûts.</p><p>Elle convient particulièrement aux utilisateurs qui veulent comparer plusieurs IA, payer à l’usage, personnaliser leur manière de travailler, organiser leurs conversations et générer du texte, des images et de la recherche depuis une seule interface.</p></div>
+  </div>
+</body>
+</html>

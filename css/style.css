@@ -163,6 +163,19 @@ body {
     margin-bottom: 0;
 }
 
+.settings-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+    max-height: 420px;
+    transition: max-height 0.2s ease;
+}
+
+.settings-menu.collapsed {
+    max-height: 0;
+}
+
 .sidebar-bottom-row {
     display: flex;
     gap: 6px;
