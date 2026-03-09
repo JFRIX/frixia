@@ -3,8 +3,42 @@ let API_KEYS = {
     openai: '',
     anthropic: '',
     google: '',
-    perplexity: ''
+    perplexity: '',
+    ollama: ''
 };
+
+let OLLAMA_CONFIG = {
+    enabled: false,
+    baseUrl: '',
+    useProxy: false,
+    proxyPath: '/ollama',
+    model: '',
+    keepAlive: '5m'
+};
+
+function getResolvedOllamaBaseUrl(config = OLLAMA_CONFIG) {
+    if (config.useProxy) {
+        const path = (config.proxyPath || '/ollama').trim() || '/ollama';
+        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+        return `${window.location.origin}${normalizedPath}`;
+    }
+    return (config.baseUrl || '').trim();
+}
+
+function getOllamaFetchDiagnostic(config = OLLAMA_CONFIG) {
+    try {
+        const resolved = getResolvedOllamaBaseUrl(config);
+        if (!resolved) return 'URL Ollama vide.';
+        const target = new URL(resolved, window.location.origin);
+        const app = new URL(window.location.href);
+        if (app.protocol === 'https:' && target.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(target.hostname)) {
+            return 'Votre site est en HTTPS mais Ollama est en HTTP (mixed content bloqué). Utilisez HTTPS côté Ollama ou activez le proxy même domaine.';
+        }
+    } catch (e) {
+        return 'URL Ollama invalide.';
+    }
+    return 'Vérifiez IP/URL, port 11434, CORS et HTTPS/HTTP (ou activez le proxy même domaine).';
+}
 
 // Modèles et tarifs — chargés depuis models.json par loadModels()
 let MODELS = [];
@@ -43,6 +77,92 @@ function loadApiKeys() {
     } catch (e) {}
 }
 
+async function loadOllamaConfig() {
+    try {
+        const response = await fetch('config/ollama.config.json', { cache: 'no-store' });
+        if (!response.ok) return;
+        const parsed = await response.json();
+        if (parsed && typeof parsed === 'object') {
+            OLLAMA_CONFIG = {
+                ...OLLAMA_CONFIG,
+                ...parsed,
+                baseUrl: (parsed.baseUrl || '').trim(),
+                model: (parsed.model || '').trim()
+            };
+        }
+    } catch (e) {}
+}
+
+function loadOllamaSettingsFromStorage() {
+    try {
+        const stored = localStorage.getItem('minou-ollama-config');
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (!parsed || typeof parsed !== 'object') return;
+        OLLAMA_CONFIG = {
+            ...OLLAMA_CONFIG,
+            ...parsed,
+            baseUrl: (parsed.baseUrl || OLLAMA_CONFIG.baseUrl || '').trim(),
+            model: (parsed.model || OLLAMA_CONFIG.model || '').trim()
+        };
+    } catch (e) {}
+}
+
+function saveOllamaConfig(config) {
+    OLLAMA_CONFIG = {
+        ...OLLAMA_CONFIG,
+        ...config,
+        baseUrl: (config.baseUrl || '').trim(),
+        model: (config.model || '').trim()
+    };
+    localStorage.setItem('minou-ollama-config', JSON.stringify(OLLAMA_CONFIG));
+}
+
+function isOllamaReady() {
+    return Boolean(OLLAMA_CONFIG.enabled && getResolvedOllamaBaseUrl(OLLAMA_CONFIG) && OLLAMA_CONFIG.model);
+}
+
+function getOllamaConfig() {
+    return { ...OLLAMA_CONFIG };
+}
+
+async function testOllamaConnection(configOverride = null) {
+    const cfg = configOverride ? {
+        ...OLLAMA_CONFIG,
+        ...configOverride,
+        baseUrl: (configOverride.baseUrl || '').trim(),
+        model: (configOverride.model || '').trim()
+    } : OLLAMA_CONFIG;
+
+    const base = getResolvedOllamaBaseUrl(cfg);
+    if (!base || !cfg.model) {
+        return { ok: false, message: 'URL et modèle Ollama requis.' };
+    }
+
+    const headers = {};
+    if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
+
+    try {
+        const response = await fetch(`${base.replace(/\/$/, '')}/api/tags`, { method: 'GET', headers });
+        if (!response.ok) {
+            const err = await response.text();
+            return { ok: false, message: `Serveur Ollama non joignable (${response.status}) ${err}` };
+        }
+        const data = await response.json();
+        const models = Array.isArray(data.models) ? data.models : [];
+        const hasModel = models.some(m => m.name === cfg.model || (m.model && m.model === cfg.model));
+        if (!hasModel) {
+            return { ok: false, message: `Connexion OK, mais le modèle "${cfg.model}" est introuvable sur ce serveur.` };
+        }
+        return { ok: true, message: `Connexion OK. Modèle "${cfg.model}" disponible.` };
+    } catch (err) {
+        if (err && err.message && /Failed to fetch/i.test(err.message)) {
+            return { ok: false, message: `Failed to fetch : ${getOllamaFetchDiagnostic(cfg)}` };
+        }
+        return { ok: false, message: err?.message || 'Erreur réseau inconnue.' };
+    }
+}
+
 function saveApiKeys(keys) {
     Object.assign(API_KEYS, keys);
     localStorage.setItem('minou-apikeys', JSON.stringify(API_KEYS));
@@ -50,6 +170,12 @@ function saveApiKeys(keys) {
 
 function loadModels() {
     const data = MODELS_DATA;
+    MODELS = [];
+    IMAGE_MODELS = [];
+    SEARCH_MODELS = [];
+    TARIFS = {};
+    IMAGE_TARIFS = {};
+    SEARCH_TARIFS = {};
     // Modèles texte
     if (data.text) {
         MODELS = data.text.map(m => ({ id: m.id, label: m.label, editeur: m.editeur }));
@@ -71,6 +197,15 @@ function loadModels() {
             SEARCH_TARIFS[m.id] = { editeur: m.editeur, inputPer1M: m.inputPer1M, outputPer1M: m.outputPer1M };
         }
     }
+
+    if (isOllamaReady()) {
+        MODELS.push({
+            id: `ollama:${OLLAMA_CONFIG.model}`,
+            label: `Ollama · ${OLLAMA_CONFIG.model}`,
+            editeur: 'ollama'
+        });
+        TARIFS[`ollama:${OLLAMA_CONFIG.model}`] = { editeur: 'ollama', inputPer1M: 0, outputPer1M: 0 };
+    }
 }
 
 function getTarif(model) {
@@ -84,7 +219,20 @@ function getModelEditeur(modelId) {
 
 async function initConfig() {
     loadApiKeys();
+    await loadOllamaConfig();
+    loadOllamaSettingsFromStorage();
     loadModels();
+}
+
+function toPlainTextContent(msg) {
+    if (typeof msg.content === 'string') return msg.content;
+    if (!Array.isArray(msg.content)) return '';
+    return msg.content.map(part => {
+        if (part.type === 'text') return part.text || '';
+        if (part.type === 'file') return `--- Contenu du fichier joint : ${part.name} ---\n${part.textContent || ''}\n--- Fin du fichier ---`;
+        if (part.type === 'image') return '[Image jointe]';
+        return '';
+    }).filter(Boolean).join('\n');
 }
 
 // --- Convertir les messages internes vers le format de chaque provider ---
@@ -209,8 +357,83 @@ function streamModel(modelId, conversationHistory, onChunk, onDone, onError, sys
             return streamGoogle(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, webSearch, onThinkingChunk, signal);
         case 'perplexity':
             return streamPerplexity(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, onThinkingChunk, signal);
+        case 'ollama':
+            return streamOllama(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, signal);
         default:
             onError(new Error(`Éditeur inconnu pour le modèle ${modelId}`));
+    }
+}
+
+async function streamOllama(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, signal) {
+    try {
+        if (!isOllamaReady()) throw new Error('Configuration Ollama incomplète.');
+
+        const messages = [];
+        if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+        for (const msg of conversationHistory) {
+            if (msg.role === 'system') continue;
+            messages.push({ role: msg.role, content: toPlainTextContent(msg) });
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
+
+        const base = getResolvedOllamaBaseUrl(OLLAMA_CONFIG);
+        const response = await fetch(`${base.replace(/\/$/, '')}/api/chat`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                model: OLLAMA_CONFIG.model,
+                messages,
+                stream: true,
+                keep_alive: OLLAMA_CONFIG.keepAlive || '5m'
+            }),
+            signal
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`Ollama API error ${response.status}: ${err}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let usage = null;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    const chunk = parsed.message?.content || '';
+                    if (chunk) onChunk(chunk);
+                    if (parsed.done) {
+                        usage = {
+                            input_tokens: parsed.prompt_eval_count || 0,
+                            output_tokens: parsed.eval_count || 0
+                        };
+                        onDone(usage, []);
+                        return;
+                    }
+                } catch (e) {}
+            }
+        }
+        onDone(usage, []);
+    } catch (err) {
+        if (err.name === 'AbortError') { onDone(null, []); return; }
+        if (err && err.message && /Failed to fetch/i.test(err.message)) {
+            onError(new Error(`Failed to fetch : ${getOllamaFetchDiagnostic(OLLAMA_CONFIG)}`));
+            return;
+        }
+        onError(err);
     }
 }
 
