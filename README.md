@@ -13,6 +13,7 @@ L'application fonctionne directement sur votre ordinateur et utilise vos **clés
 - Anthropic  
 - Google  
 - Perplexity  
+- Ollama
 
 Aucun abonnement à la plateforme n’est nécessaire.
 
