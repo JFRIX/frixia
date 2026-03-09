@@ -146,6 +146,9 @@ async function testOllamaConnection(configOverride = null) {
         const response = await fetch(`${base.replace(/\/$/, '')}/api/tags`, { method: 'GET', headers });
         if (!response.ok) {
             const err = await response.text();
+            if (response.status === 403) {
+                return { ok: false, message: 'Accès refusé (403). Le serveur/proxy bloque l\'accès (IP non autorisée, règle firewall/reverse-proxy ou auth requise).' };
+            }
             return { ok: false, message: `Serveur Ollama non joignable (${response.status}) ${err}` };
         }
         const data = await response.json();
@@ -160,6 +163,17 @@ async function testOllamaConnection(configOverride = null) {
             return { ok: false, message: `Failed to fetch : ${getOllamaFetchDiagnostic(cfg)}` };
         }
         return { ok: false, message: err?.message || 'Erreur réseau inconnue.' };
+    }
+}
+
+async function probeOllamaAccess(baseUrl, headers) {
+    const response = await fetch(`${baseUrl.replace(/\/$/, '')}/api/tags`, { method: 'GET', headers });
+    if (!response.ok) {
+        if (response.status === 403) {
+            throw new Error('Accès refusé (403) par le serveur Ollama/proxy. Vérifiez firewall, règle reverse proxy et autorisation IP.');
+        }
+        const err = await response.text();
+        throw new Error(`Ollama non accessible (${response.status}): ${err}`);
     }
 }
 
@@ -379,6 +393,7 @@ async function streamOllama(modelId, conversationHistory, onChunk, onDone, onErr
         if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
 
         const base = getResolvedOllamaBaseUrl(OLLAMA_CONFIG);
+        await probeOllamaAccess(base, API_KEYS.ollama ? { Authorization: `Bearer ${API_KEYS.ollama}` } : {});
         const response = await fetch(`${base.replace(/\/$/, '')}/api/chat`, {
             method: 'POST',
             headers,
