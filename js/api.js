@@ -3,7 +3,15 @@ let API_KEYS = {
     openai: '',
     anthropic: '',
     google: '',
-    perplexity: ''
+    perplexity: '',
+    ollama: ''
+};
+
+let OLLAMA_CONFIG = {
+    enabled: false,
+    baseUrl: '',
+    model: '',
+    keepAlive: '5m'
 };
 
 // Modèles et tarifs — chargés depuis models.json par loadModels()
@@ -43,6 +51,55 @@ function loadApiKeys() {
     } catch (e) {}
 }
 
+async function loadOllamaConfig() {
+    try {
+        const response = await fetch('config/ollama.config.json', { cache: 'no-store' });
+        if (!response.ok) return;
+        const parsed = await response.json();
+        if (parsed && typeof parsed === 'object') {
+            OLLAMA_CONFIG = {
+                ...OLLAMA_CONFIG,
+                ...parsed,
+                baseUrl: (parsed.baseUrl || '').trim(),
+                model: (parsed.model || '').trim()
+            };
+        }
+    } catch (e) {}
+}
+
+function loadOllamaSettingsFromStorage() {
+    try {
+        const stored = localStorage.getItem('minou-ollama-config');
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (!parsed || typeof parsed !== 'object') return;
+        OLLAMA_CONFIG = {
+            ...OLLAMA_CONFIG,
+            ...parsed,
+            baseUrl: (parsed.baseUrl || OLLAMA_CONFIG.baseUrl || '').trim(),
+            model: (parsed.model || OLLAMA_CONFIG.model || '').trim()
+        };
+    } catch (e) {}
+}
+
+function saveOllamaConfig(config) {
+    OLLAMA_CONFIG = {
+        ...OLLAMA_CONFIG,
+        ...config,
+        baseUrl: (config.baseUrl || '').trim(),
+        model: (config.model || '').trim()
+    };
+    localStorage.setItem('minou-ollama-config', JSON.stringify(OLLAMA_CONFIG));
+}
+
+function isOllamaReady() {
+    return Boolean(OLLAMA_CONFIG.enabled && OLLAMA_CONFIG.baseUrl && OLLAMA_CONFIG.model);
+}
+
+function getOllamaConfig() {
+    return { ...OLLAMA_CONFIG };
+}
+
 function saveApiKeys(keys) {
     Object.assign(API_KEYS, keys);
     localStorage.setItem('minou-apikeys', JSON.stringify(API_KEYS));
@@ -50,6 +107,12 @@ function saveApiKeys(keys) {
 
 function loadModels() {
     const data = MODELS_DATA;
+    MODELS = [];
+    IMAGE_MODELS = [];
+    SEARCH_MODELS = [];
+    TARIFS = {};
+    IMAGE_TARIFS = {};
+    SEARCH_TARIFS = {};
     // Modèles texte
     if (data.text) {
         MODELS = data.text.map(m => ({ id: m.id, label: m.label, editeur: m.editeur }));
@@ -71,6 +134,15 @@ function loadModels() {
             SEARCH_TARIFS[m.id] = { editeur: m.editeur, inputPer1M: m.inputPer1M, outputPer1M: m.outputPer1M };
         }
     }
+
+    if (isOllamaReady()) {
+        MODELS.push({
+            id: `ollama:${OLLAMA_CONFIG.model}`,
+            label: `Ollama · ${OLLAMA_CONFIG.model}`,
+            editeur: 'ollama'
+        });
+        TARIFS[`ollama:${OLLAMA_CONFIG.model}`] = { editeur: 'ollama', inputPer1M: 0, outputPer1M: 0 };
+    }
 }
 
 function getTarif(model) {
@@ -84,7 +156,20 @@ function getModelEditeur(modelId) {
 
 async function initConfig() {
     loadApiKeys();
+    await loadOllamaConfig();
+    loadOllamaSettingsFromStorage();
     loadModels();
+}
+
+function toPlainTextContent(msg) {
+    if (typeof msg.content === 'string') return msg.content;
+    if (!Array.isArray(msg.content)) return '';
+    return msg.content.map(part => {
+        if (part.type === 'text') return part.text || '';
+        if (part.type === 'file') return `--- Contenu du fichier joint : ${part.name} ---\n${part.textContent || ''}\n--- Fin du fichier ---`;
+        if (part.type === 'image') return '[Image jointe]';
+        return '';
+    }).filter(Boolean).join('\n');
 }
 
 // --- Convertir les messages internes vers le format de chaque provider ---
@@ -209,8 +294,78 @@ function streamModel(modelId, conversationHistory, onChunk, onDone, onError, sys
             return streamGoogle(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, webSearch, onThinkingChunk, signal);
         case 'perplexity':
             return streamPerplexity(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, onThinkingChunk, signal);
+        case 'ollama':
+            return streamOllama(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, signal);
         default:
             onError(new Error(`Éditeur inconnu pour le modèle ${modelId}`));
+    }
+}
+
+async function streamOllama(modelId, conversationHistory, onChunk, onDone, onError, systemPrompt, signal) {
+    try {
+        if (!isOllamaReady()) throw new Error('Configuration Ollama incomplète.');
+
+        const messages = [];
+        if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+        for (const msg of conversationHistory) {
+            if (msg.role === 'system') continue;
+            messages.push({ role: msg.role, content: toPlainTextContent(msg) });
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
+
+        const response = await fetch(`${OLLAMA_CONFIG.baseUrl.replace(/\/$/, '')}/api/chat`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                model: OLLAMA_CONFIG.model,
+                messages,
+                stream: true,
+                keep_alive: OLLAMA_CONFIG.keepAlive || '5m'
+            }),
+            signal
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`Ollama API error ${response.status}: ${err}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let usage = null;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    const chunk = parsed.message?.content || '';
+                    if (chunk) onChunk(chunk);
+                    if (parsed.done) {
+                        usage = {
+                            input_tokens: parsed.prompt_eval_count || 0,
+                            output_tokens: parsed.eval_count || 0
+                        };
+                        onDone(usage, []);
+                        return;
+                    }
+                } catch (e) {}
+            }
+        }
+        onDone(usage, []);
+    } catch (err) {
+        if (err.name === 'AbortError') { onDone(null, []); return; }
+        onError(err);
     }
 }
 

@@ -1040,6 +1040,13 @@ function populateSearchModelSelect() {
 // --- Sélecteurs mutuellement exclusifs ---
 function checkApiKeyForModel(modelId, lookupFn) {
     const editeur = lookupFn(modelId);
+    if (editeur === 'ollama') {
+        if (!isOllamaReady()) {
+            showModelAlert('Configuration Ollama incomplète. Vérifiez la section Ollama dans Configuration.');
+            return false;
+        }
+        return true;
+    }
     if (editeur && !API_KEYS[editeur]) {
         showModelAlert(`Clé API ${editeur} manquante. Renseignez-la dans Configuration.`);
         return false;
@@ -3002,6 +3009,11 @@ function openApiKeysModal() {
     document.getElementById('apikey-anthropic').value = API_KEYS.anthropic || '';
     document.getElementById('apikey-google').value = API_KEYS.google || '';
     document.getElementById('apikey-perplexity').value = API_KEYS.perplexity || '';
+    document.getElementById('apikey-ollama').value = API_KEYS.ollama || '';
+    const ollamaCfg = getOllamaConfig();
+    document.getElementById('ollama-enabled').checked = !!ollamaCfg.enabled;
+    document.getElementById('ollama-base-url').value = ollamaCfg.baseUrl || '';
+    document.getElementById('ollama-model').value = ollamaCfg.model || '';
     apikeysModalOverlay.style.display = 'flex';
 }
 
@@ -3014,8 +3026,22 @@ function saveApiKeysFromModal() {
         openai: document.getElementById('apikey-openai').value.trim(),
         anthropic: document.getElementById('apikey-anthropic').value.trim(),
         google: document.getElementById('apikey-google').value.trim(),
-        perplexity: document.getElementById('apikey-perplexity').value.trim()
+        perplexity: document.getElementById('apikey-perplexity').value.trim(),
+        ollama: document.getElementById('apikey-ollama').value.trim()
     });
+
+    saveOllamaConfig({
+        enabled: document.getElementById('ollama-enabled').checked,
+        baseUrl: document.getElementById('ollama-base-url').value.trim(),
+        model: document.getElementById('ollama-model').value.trim()
+    });
+
+    loadModels();
+    populateModelSelect();
+    if (currentModel && !MODELS.some(m => m.id === currentModel)) {
+        currentModel = null;
+        modelSelect.value = '';
+    }
     closeApiKeysModal();
 }
 

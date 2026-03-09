@@ -196,7 +196,7 @@
     <!-- Modale Configuration Clés API -->
     <div id="apikeys-modal-overlay" class="sp-modal-overlay" style="display:none">
         <div class="sp-modal">
-            <h3>Configuration des clés API</h3>
+            <h3>Configuration des clés API et Ollama</h3>
             <p class="apikey-intro">Ajoutez vos propres clés API pour utiliser les IA directement, sans limite et sans abonnement. Vous ne payez que ce que vous consommez. Pensez à surveiller votre consommation sur le tableau de bord de chaque fournisseur.</p>
             <label class="sp-modal-label" for="apikey-openai">OpenAI</label>
             <div class="apikey-field">
@@ -230,6 +230,25 @@
                 </button>
             </div>
             <a class="apikey-link" href="https://www.perplexity.ai/account/api/keys" target="_blank" rel="noopener noreferrer">Obtenir une clé Perplexity &rarr;</a>
+
+            <hr style="margin:14px 0;border:none;border-top:1px solid var(--border-input)">
+            <label class="sp-modal-label" for="ollama-enabled">Ollama (serveur privé)</label>
+            <input type="checkbox" id="ollama-enabled" style="margin: 4px 0 10px 0;"> Activer Ollama
+
+            <label class="sp-modal-label" for="ollama-base-url">Adresse du serveur Ollama</label>
+            <input type="text" id="ollama-base-url" class="sp-modal-input" placeholder="http://IP:11434">
+
+            <label class="sp-modal-label" for="ollama-model">Modèle Ollama</label>
+            <input type="text" id="ollama-model" class="sp-modal-input" placeholder="llama3.1:8b">
+
+            <label class="sp-modal-label" for="apikey-ollama">Token Ollama (optionnel)</label>
+            <div class="apikey-field">
+                <input type="password" id="apikey-ollama" class="sp-modal-input apikey-input" placeholder="Bearer token optionnel">
+                <button type="button" class="apikey-toggle-vis" data-target="apikey-ollama" title="Afficher/masquer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+            <small style="display:block;color:var(--text-secondary);margin-top:6px">Vous pouvez aussi préremplir ces valeurs dans <code>config/ollama.config.json</code> (IP, modèle, etc.).</small>
             <div class="sp-modal-actions">
                 <button id="apikeys-modal-cancel" class="sp-modal-btn sp-modal-btn-cancel">Annuler</button>
                 <button id="apikeys-modal-save" class="sp-modal-btn sp-modal-btn-save">Enregistrer</button>
