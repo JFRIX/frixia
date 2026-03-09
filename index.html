@@ -241,6 +241,11 @@
             <label class="sp-modal-label" for="ollama-model">Modèle Ollama</label>
             <input type="text" id="ollama-model" class="sp-modal-input" placeholder="llama3.1:8b">
 
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                <button type="button" id="ollama-test-btn" class="sp-modal-btn sp-modal-btn-cancel" style="padding:6px 10px;">Tester la connexion</button>
+                <span id="ollama-test-result" style="font-size:0.82rem;color:var(--text-secondary);"></span>
+            </div>
+
             <label class="sp-modal-label" for="apikey-ollama">Token Ollama (optionnel)</label>
             <div class="apikey-field">
                 <input type="password" id="apikey-ollama" class="sp-modal-input apikey-input" placeholder="Bearer token optionnel">

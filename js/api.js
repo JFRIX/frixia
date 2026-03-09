@@ -100,6 +100,42 @@ function getOllamaConfig() {
     return { ...OLLAMA_CONFIG };
 }
 
+async function testOllamaConnection(configOverride = null) {
+    const cfg = configOverride ? {
+        ...OLLAMA_CONFIG,
+        ...configOverride,
+        baseUrl: (configOverride.baseUrl || '').trim(),
+        model: (configOverride.model || '').trim()
+    } : OLLAMA_CONFIG;
+
+    if (!cfg.baseUrl || !cfg.model) {
+        return { ok: false, message: 'URL et modèle Ollama requis.' };
+    }
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (API_KEYS.ollama) headers.Authorization = `Bearer ${API_KEYS.ollama}`;
+
+    try {
+        const response = await fetch(`${cfg.baseUrl.replace(/\/$/, '')}/api/tags`, { method: 'GET', headers });
+        if (!response.ok) {
+            const err = await response.text();
+            return { ok: false, message: `Serveur Ollama non joignable (${response.status}) ${err}` };
+        }
+        const data = await response.json();
+        const models = Array.isArray(data.models) ? data.models : [];
+        const hasModel = models.some(m => m.name === cfg.model || (m.model && m.model === cfg.model));
+        if (!hasModel) {
+            return { ok: false, message: `Connexion OK, mais le modèle "${cfg.model}" est introuvable sur ce serveur.` };
+        }
+        return { ok: true, message: `Connexion OK. Modèle "${cfg.model}" disponible.` };
+    } catch (err) {
+        if (err && err.message && /Failed to fetch/i.test(err.message)) {
+            return { ok: false, message: 'Failed to fetch : vérifiez l\'IP/URL, le port 11434, CORS et HTTPS/HTTP.' };
+        }
+        return { ok: false, message: err?.message || 'Erreur réseau inconnue.' };
+    }
+}
+
 function saveApiKeys(keys) {
     Object.assign(API_KEYS, keys);
     localStorage.setItem('minou-apikeys', JSON.stringify(API_KEYS));
@@ -365,6 +401,10 @@ async function streamOllama(modelId, conversationHistory, onChunk, onDone, onErr
         onDone(usage, []);
     } catch (err) {
         if (err.name === 'AbortError') { onDone(null, []); return; }
+        if (err && err.message && /Failed to fetch/i.test(err.message)) {
+            onError(new Error('Failed to fetch : impossible de joindre Ollama (IP/URL/port/CORS).'));
+            return;
+        }
         onError(err);
     }
 }

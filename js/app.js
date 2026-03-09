@@ -57,6 +57,8 @@ const apikeysBtn = document.getElementById('apikeys-btn');
 const apikeysModalOverlay = document.getElementById('apikeys-modal-overlay');
 const apikeysModalCancel = document.getElementById('apikeys-modal-cancel');
 const apikeysModalSave = document.getElementById('apikeys-modal-save');
+const ollamaTestBtn = document.getElementById('ollama-test-btn');
+const ollamaTestResult = document.getElementById('ollama-test-result');
 
 let currentModel = null;
 let currentImageModel = null;
@@ -1237,6 +1239,14 @@ function showModelAlert(msg) {
     }, 4000);
 }
 
+function normalizeApiErrorMessage(err) {
+    const message = err?.message || 'Erreur inconnue';
+    if (/Failed to fetch/i.test(message)) {
+        return 'Failed to fetch : impossible de joindre le serveur. Vérifiez IP/URL, port, CORS et HTTPS/HTTP.';
+    }
+    return message;
+}
+
 // --- Générer l'identifiant de conversation ---
 function generateConversationId(prompt) {
     const now = new Date();
@@ -1724,7 +1734,7 @@ function regenerateLastResponse() {
             (err) => {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
-                if (textEl) { textEl.textContent = `Erreur : ${err.message}`; textEl.style.color = '#c00'; }
+                if (textEl) { textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`; textEl.style.color = '#c00'; }
                 isStreaming = false; currentAbortController = null; updateSendButton(); promptInput.focus();
             },
             regenRefImages,
@@ -1762,7 +1772,7 @@ function regenerateLastResponse() {
             (err) => {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
-                if (textEl) { textEl.textContent = `Erreur : ${err.message}`; textEl.style.color = '#c00'; }
+                if (textEl) { textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`; textEl.style.color = '#c00'; }
                 isStreaming = false; currentAbortController = null; updateSendButton(); promptInput.focus();
             },
             spContent,
@@ -2014,7 +2024,7 @@ function sendMessage() {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
                 if (textEl) {
-                    textEl.textContent = `Erreur : ${err.message}`;
+                    textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`;
                     textEl.style.color = '#c00';
                 }
                 isStreaming = false;
@@ -2092,7 +2102,7 @@ function sendMessage() {
                 assistantDiv.classList.remove('streaming');
                 const textEl = assistantDiv.querySelector('.message-text');
                 if (textEl) {
-                    textEl.textContent = `Erreur : ${err.message}`;
+                    textEl.textContent = `Erreur : ${normalizeApiErrorMessage(err)}`;
                     textEl.style.color = '#c00';
                 }
                 isStreaming = false;
@@ -3014,6 +3024,7 @@ function openApiKeysModal() {
     document.getElementById('ollama-enabled').checked = !!ollamaCfg.enabled;
     document.getElementById('ollama-base-url').value = ollamaCfg.baseUrl || '';
     document.getElementById('ollama-model').value = ollamaCfg.model || '';
+    ollamaTestResult.textContent = '';
     apikeysModalOverlay.style.display = 'flex';
 }
 
@@ -3044,6 +3055,30 @@ function saveApiKeysFromModal() {
     }
     closeApiKeysModal();
 }
+
+ollamaTestBtn.addEventListener('click', async () => {
+    const baseUrl = document.getElementById('ollama-base-url').value.trim();
+    const model = document.getElementById('ollama-model').value.trim();
+    if (!baseUrl || !model) {
+        ollamaTestResult.textContent = 'Renseignez URL et modèle.';
+        ollamaTestResult.style.color = '#c00';
+        return;
+    }
+
+    ollamaTestBtn.disabled = true;
+    ollamaTestResult.style.color = 'var(--text-secondary)';
+    ollamaTestResult.textContent = 'Test en cours...';
+    try {
+        const result = await testOllamaConnection({ baseUrl, model });
+        ollamaTestResult.textContent = result.message;
+        ollamaTestResult.style.color = result.ok ? '#1a7f37' : '#c00';
+    } catch (e) {
+        ollamaTestResult.textContent = normalizeApiErrorMessage(e);
+        ollamaTestResult.style.color = '#c00';
+    } finally {
+        ollamaTestBtn.disabled = false;
+    }
+});
 
 function fmtTokens(n) {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
