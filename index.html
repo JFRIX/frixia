@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frixia</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <button id="sidebar-toggle" class="sidebar-toggle" title="Masquer le panneau">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+    </button>
+    <aside class="sidebar" id="sidebar">
+        <h1 class="sidebar-title"><span class="sidebar-logo">🦝</span> Frixia <span class="version-badge">2.3</span></h1>
+        <a href="https://www.frixone.com" target="_blank" rel="noopener noreferrer" class="sidebar-credit">by Jean-Yves FRIXON</a>
+        <button id="new-chat-btn" class="new-chat-btn">+ Nouvelle conversation</button>
+
+        <div class="sp-section">
+            <div class="sp-header">
+                <span class="sp-toggle" data-target="sp-content">&#9656;</span>
+                <span class="sp-title">Rôles</span>
+                <button id="sp-import-btn" class="sp-add-btn" title="Importer un rôle">&#8681;</button>
+                <button id="sp-add-btn" class="sp-add-btn" title="Créer un rôle">+</button>
+                <input type="file" id="sp-import-file" accept=".json" hidden>
+            </div>
+            <div id="sp-content" class="sp-collapsible collapsed">
+                <div id="sp-list" class="sp-list"></div>
+            </div>
+        </div>
+
+        <div class="sp-section">
+            <div class="sp-header">
+                <span class="sp-toggle" data-target="pr-content">&#9656;</span>
+                <span class="sp-title">Prompts enregistrés</span>
+                <button id="pr-add-btn" class="sp-add-btn" title="Créer un prompt">+</button>
+            </div>
+            <div id="pr-content" class="sp-collapsible collapsed">
+                <div id="pr-list" class="sp-list"></div>
+            </div>
+        </div>
+
+        <div class="sp-section" id="conv-sp-section">
+            <div class="sp-header">
+                <span class="sp-toggle" data-target="conv-content">&#9656;</span>
+                <span class="sp-title">Conversations</span>
+            </div>
+            <div id="conv-content" class="sp-collapsible collapsed">
+                <input type="text" id="conv-search" placeholder="Rechercher...">
+                <div id="cat-bar" class="cat-bar">
+                    <div id="cat-icons" class="cat-icons"></div>
+                    <button id="cat-add-btn" class="cat-add-btn" title="Nouvelle catégorie">+</button>
+                </div>
+                <div class="conv-list-container">
+                    <div id="conv-list" class="conv-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-bottom-row">
+                <button id="export-btn" class="sidebar-bottom-btn" title="Exporter toutes les données">&#8679; Exporter</button>
+                <button id="import-btn" class="sidebar-bottom-btn" title="Importer des données">&#8681; Importer</button>
+            </div>
+            <button id="dashboard-btn" class="sidebar-bottom-btn" title="Statistiques d'utilisation">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg> Statistiques
+            </button>
+            <button id="apikeys-btn" class="sidebar-bottom-btn" title="Configurer les clés API">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configuration
+            </button>
+            <button id="theme-toggle" class="sidebar-bottom-btn" title="Changer le thème">&#9788; Thème clair</button>
+            <input type="file" id="import-file-input" accept=".json" hidden>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div id="chat-container" class="chat-container"></div>
+        <div class="export-btns-group">
+            <button id="export-md-btn" class="export-action-btn" title="Exporter en Markdown" style="display:none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </button>
+            <button id="export-html-btn" class="export-action-btn" title="Exporter en HTML" style="display:none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </button>
+            <button id="summary-btn" class="export-action-btn" title="Résumé IA pour nouvelle conversation" style="display:none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="14" x2="14" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div id="model-alert" class="model-alert" style="display:none">Veuillez choisir un modèle (texte ou image) avant d'envoyer.</div>
+        <div class="model-bar" id="model-bar">
+            <label for="model-select" class="model-label">Modèle texte :</label>
+            <select id="model-select" class="model-select">
+                <option value="">—</option>
+            </select>
+            <label for="image-model-select" class="model-label">Modèle image :</label>
+            <select id="image-model-select" class="model-select">
+                <option value="">—</option>
+            </select>
+            <label for="image-format-select" class="model-label" id="image-format-label" style="display:none;">Format :</label>
+            <select id="image-format-select" class="model-select" style="display:none;">
+                <option value="square">Carré</option>
+                <option value="vertical">Vertical</option>
+                <option value="horizontal">Horizontal</option>
+            </select>
+            <label for="search-model-select" class="model-label">Modèle recherche :</label>
+            <select id="search-model-select" class="model-select">
+                <option value="">—</option>
+            </select>
+            <span class="model-bar-spacer"></span>
+            <label for="sp-select" class="model-label">Rôle :</label>
+            <select id="sp-select" class="model-select">
+                <option value="">Aucun</option>
+            </select>
+        </div>
+
+        <div class="token-bar" id="token-bar">
+            <span id="token-info">Tokens — entrée : 0 | sortie : 0</span>
+            <span id="cost-info">Coût estimé : $0.0000</span>
+        </div>
+
+        <div class="input-area">
+            <div id="attach-preview"></div>
+            <div class="input-wrapper">
+                <button id="attach-btn" title="Joindre un fichier">+</button>
+                <button id="web-search-toggle" class="web-search-toggle" title="Recherche web">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+                <input type="file" id="file-input" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.log,.js,.py,.html,.css" multiple hidden>
+                <textarea
+                    id="prompt-input"
+                    class="prompt-input"
+                    placeholder="Écrivez votre message..."
+                    rows="1"
+                ></textarea>
+
+                <button id="enhance-prompt-btn" class="enhance-prompt-btn" title="Améliorer le prompt" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M11 6.2L9.7 5"/><path d="M11 11.8L9.7 13"/><path d="M2 21l9-9"/></svg></button>
+                <button id="prompt-picker-btn" title="Insérer un prompt enregistré"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></svg></button>
+                <button id="mic-btn" class="mic-btn" title="Dicter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+                <button id="send-btn" class="send-btn" disabled>OK</button>
+            </div>
+            <div id="prompt-picker-dropdown" class="prompt-picker-dropdown" style="display:none"></div>
+            <span class="input-hint">Ctrl+Entrée pour envoyer</span>
+        </div>
+    </main>
+
+    <!-- Modale Rôle -->
+    <div id="sp-modal-overlay" class="sp-modal-overlay" style="display:none">
+        <div class="sp-modal">
+            <h3 id="sp-modal-title">Nouveau rôle</h3>
+            <label class="sp-modal-label" for="sp-modal-nom">Nom</label>
+            <input type="text" id="sp-modal-nom" class="sp-modal-input" placeholder="Ex : Assistant technique">
+            <label class="sp-modal-label" for="sp-modal-contenu">Contenu</label>
+            <textarea id="sp-modal-contenu" class="sp-modal-textarea" rows="8" placeholder="Tu es un assistant..."></textarea>
+            <div class="sp-modal-actions">
+                <button id="sp-modal-optimize" class="sp-modal-btn sp-modal-btn-optimize">&#10024; Optimiser</button>
+                <span class="sp-modal-spacer"></span>
+                <button id="sp-modal-cancel" class="sp-modal-btn sp-modal-btn-cancel">Annuler</button>
+                <button id="sp-modal-save" class="sp-modal-btn sp-modal-btn-save">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Prompt enregistré -->
+    <div id="pr-modal-overlay" class="sp-modal-overlay" style="display:none">
+        <div class="sp-modal">
+            <h3 id="pr-modal-title">Nouveau Prompt</h3>
+            <label class="sp-modal-label" for="pr-modal-nom">Nom</label>
+            <input type="text" id="pr-modal-nom" class="sp-modal-input" placeholder="Ex : Résume ce texte">
+            <label class="sp-modal-label" for="pr-modal-contenu">Contenu</label>
+            <textarea id="pr-modal-contenu" class="sp-modal-textarea" rows="8" placeholder="Résume le texte suivant en 3 points..."></textarea>
+            <div class="sp-modal-actions">
+                <button id="pr-modal-cancel" class="sp-modal-btn sp-modal-btn-cancel">Annuler</button>
+                <button id="pr-modal-save" class="sp-modal-btn sp-modal-btn-save">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Dashboard Statistiques -->
+    <div id="dashboard-modal-overlay" class="sp-modal-overlay" style="display:none">
+        <div class="sp-modal dashboard-modal">
+            <div class="dashboard-header">
+                <h3>Statistiques</h3>
+                <button id="dashboard-close" class="sp-modal-btn sp-modal-btn-cancel">&#10005;</button>
+            </div>
+            <div class="dashboard-tabs">
+                <button class="dashboard-tab active" data-tab="periodes">Périodes</button>
+                <button class="dashboard-tab" data-tab="conversations">Conversations</button>
+                <button class="dashboard-tab" data-tab="modeles">Modèles</button>
+                <button class="dashboard-tab" data-tab="editeurs">Éditeurs</button>
+                <button class="dashboard-tab" data-tab="categories">Catégories</button>
+            </div>
+            <div id="dashboard-content" class="dashboard-content"></div>
+        </div>
+    </div>
+
+    <!-- Modale Configuration Clés API -->
+    <div id="apikeys-modal-overlay" class="sp-modal-overlay" style="display:none">
+        <div class="sp-modal">
+            <h3>Configuration des clés API</h3>
+            <p class="apikey-intro">Ajoutez vos propres clés API pour utiliser les IA directement, sans limite et sans abonnement. Vous ne payez que ce que vous consommez. Pensez à surveiller votre consommation sur le tableau de bord de chaque fournisseur.</p>
+            <label class="sp-modal-label" for="apikey-openai">OpenAI</label>
+            <div class="apikey-field">
+                <input type="password" id="apikey-openai" class="sp-modal-input apikey-input" placeholder="sk-...">
+                <button type="button" class="apikey-toggle-vis" data-target="apikey-openai" title="Afficher/masquer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+            <a class="apikey-link" href="https://platform.openai.com/settings/organization/api-keys" target="_blank" rel="noopener noreferrer">Obtenir une clé OpenAI &rarr;</a>
+            <label class="sp-modal-label" for="apikey-anthropic">Anthropic</label>
+            <div class="apikey-field">
+                <input type="password" id="apikey-anthropic" class="sp-modal-input apikey-input" placeholder="sk-ant-...">
+                <button type="button" class="apikey-toggle-vis" data-target="apikey-anthropic" title="Afficher/masquer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+            <a class="apikey-link" href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener noreferrer">Obtenir une clé Anthropic &rarr;</a>
+            <label class="sp-modal-label" for="apikey-google">Google</label>
+            <div class="apikey-field">
+                <input type="password" id="apikey-google" class="sp-modal-input apikey-input" placeholder="AIza...">
+                <button type="button" class="apikey-toggle-vis" data-target="apikey-google" title="Afficher/masquer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+            <a class="apikey-link" href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer">Obtenir une clé Google &rarr;</a>
+            <label class="sp-modal-label" for="apikey-perplexity">Perplexity</label>
+            <div class="apikey-field">
+                <input type="password" id="apikey-perplexity" class="sp-modal-input apikey-input" placeholder="pplx-...">
+                <button type="button" class="apikey-toggle-vis" data-target="apikey-perplexity" title="Afficher/masquer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+            <a class="apikey-link" href="https://www.perplexity.ai/account/api/keys" target="_blank" rel="noopener noreferrer">Obtenir une clé Perplexity &rarr;</a>
+            <div class="sp-modal-actions">
+                <button id="apikeys-modal-cancel" class="sp-modal-btn sp-modal-btn-cancel">Annuler</button>
+                <button id="apikeys-modal-save" class="sp-modal-btn sp-modal-btn-save">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Catégorie -->
+    <div id="cat-modal-overlay" class="sp-modal-overlay" style="display:none">
+        <div class="sp-modal">
+            <h3 id="cat-modal-title">Nouvelle catégorie</h3>
+            <label class="sp-modal-label" for="cat-modal-nom">Nom</label>
+            <input type="text" id="cat-modal-nom" class="sp-modal-input" placeholder="Ex : Travail">
+            <label class="sp-modal-label">Icône (emoji)</label>
+            <div class="emoji-picker-wrapper">
+                <button type="button" id="cat-modal-icone-btn" class="emoji-picker-selected" title="Choisir un emoji">
+                    <span id="cat-modal-icone-preview">?</span>
+                </button>
+                <input type="hidden" id="cat-modal-icone">
+                <div id="emoji-picker" class="emoji-picker" style="display:none">
+                    <input type="text" id="emoji-search" class="emoji-search" placeholder="Rechercher...">
+                    <div id="emoji-tabs" class="emoji-tabs"></div>
+                    <div id="emoji-grid" class="emoji-grid"></div>
+                </div>
+            </div>
+            <label class="sp-modal-label" for="cat-modal-couleur">Couleur</label>
+            <input type="color" id="cat-modal-couleur" class="cat-color-picker" value="#3b82f6">
+            <div class="sp-modal-actions">
+                <button id="cat-modal-delete" class="sp-modal-btn sp-modal-btn-cancel" style="color:#c00;display:none">Supprimer</button>
+                <span class="sp-modal-spacer"></span>
+                <button id="cat-modal-cancel" class="sp-modal-btn sp-modal-btn-cancel">Annuler</button>
+                <button id="cat-modal-save" class="sp-modal-btn sp-modal-btn-save">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lightbox-overlay" class="lightbox-overlay" style="display:none">
+        <button id="lightbox-close" class="lightbox-close">&times;</button>
+        <img id="lightbox-img" class="lightbox-img" src="" alt="">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="models.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/filemanager.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
